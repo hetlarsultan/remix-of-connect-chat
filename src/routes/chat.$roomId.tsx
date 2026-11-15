@@ -95,7 +95,7 @@ function ChatRoom() {
             profileCache.current.set(m.user_id, p);
           }
         }
-        setMessages((prev) => [...prev, { ...m, profile: p }]);
+        setMessages((prev) => prev.some((x) => x.id === m.id) ? prev : [...prev, { ...m, profile: p }]);
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };

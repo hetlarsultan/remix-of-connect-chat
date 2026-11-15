@@ -18,6 +18,7 @@ import { Route as MembersRouteImport } from './routes/members'
 import { Route as NewsRouteImport } from './routes/news'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as PayoutsRouteImport } from './routes/payouts'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RewardsRouteImport } from './routes/rewards'
 import { Route as RulesRouteImport } from './routes/rules'
 import { Route as SsvMonitorRouteImport } from './routes/ssv-monitor'
@@ -71,6 +72,11 @@ const NotificationsRoute = NotificationsRouteImport.update({
 const PayoutsRoute = PayoutsRouteImport.update({
   id: '/payouts',
   path: '/payouts',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RewardsRoute = RewardsRouteImport.update({
@@ -129,6 +135,7 @@ export interface FileRoutesByFullPath {
   '/news': typeof NewsRoute
   '/notifications': typeof NotificationsRoute
   '/payouts': typeof PayoutsRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/rewards': typeof RewardsRoute
   '/rules': typeof RulesRoute
   '/ssv-monitor': typeof SsvMonitorRoute
@@ -149,6 +156,7 @@ export interface FileRoutesByTo {
   '/news': typeof NewsRoute
   '/notifications': typeof NotificationsRoute
   '/payouts': typeof PayoutsRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/rewards': typeof RewardsRoute
   '/rules': typeof RulesRoute
   '/ssv-monitor': typeof SsvMonitorRoute
@@ -170,6 +178,7 @@ export interface FileRoutesById {
   '/news': typeof NewsRoute
   '/notifications': typeof NotificationsRoute
   '/payouts': typeof PayoutsRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/rewards': typeof RewardsRoute
   '/rules': typeof RulesRoute
   '/ssv-monitor': typeof SsvMonitorRoute
@@ -192,6 +201,7 @@ export interface FileRouteTypes {
     | '/news'
     | '/notifications'
     | '/payouts'
+    | '/reset-password'
     | '/rewards'
     | '/rules'
     | '/ssv-monitor'
@@ -212,6 +222,7 @@ export interface FileRouteTypes {
     | '/news'
     | '/notifications'
     | '/payouts'
+    | '/reset-password'
     | '/rewards'
     | '/rules'
     | '/ssv-monitor'
@@ -232,6 +243,7 @@ export interface FileRouteTypes {
     | '/news'
     | '/notifications'
     | '/payouts'
+    | '/reset-password'
     | '/rewards'
     | '/rules'
     | '/ssv-monitor'
@@ -253,6 +265,7 @@ export interface RootRouteChildren {
   NewsRoute: typeof NewsRoute
   NotificationsRoute: typeof NotificationsRoute
   PayoutsRoute: typeof PayoutsRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   RewardsRoute: typeof RewardsRoute
   RulesRoute: typeof RulesRoute
   SsvMonitorRoute: typeof SsvMonitorRoute
@@ -327,6 +340,13 @@ declare module '@tanstack/react-router' {
       path: '/payouts'
       fullPath: '/payouts'
       preLoaderRoute: typeof PayoutsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/rewards': {
@@ -405,6 +425,7 @@ const rootRouteChildren: RootRouteChildren = {
   NewsRoute: NewsRoute,
   NotificationsRoute: NotificationsRoute,
   PayoutsRoute: PayoutsRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   RewardsRoute: RewardsRoute,
   RulesRoute: RulesRoute,
   SsvMonitorRoute: SsvMonitorRoute,
