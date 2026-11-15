@@ -11,15 +11,10 @@ export function Avatar({ profile, size = "md", onClick, ring = true }: { profile
   const initial = profile.username?.charAt(0)?.toUpperCase() ?? "؟";
   const ringClass = ring ? "ring-2 ring-offset-2 ring-offset-background" : "";
   const ringColor = profile.gender === "female" ? "ring-pink-400/60" : "ring-primary/60";
-
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={!onClick}
-      className={`relative ${sizes[size]} rounded-full overflow-hidden font-bold flex items-center justify-center shrink-0 ${ringClass} ${ringColor} ${onClick ? "cursor-pointer hover:scale-105 transition-transform" : "cursor-default"}`}
-      style={{ backgroundColor: profile.name_color }}
-    >
+  const className = `relative ${sizes[size]} rounded-full overflow-hidden font-bold flex items-center justify-center shrink-0 ${ringClass} ${ringColor} ${onClick ? "cursor-pointer hover:scale-105 transition-transform" : "cursor-default"}`;
+  const style = { backgroundColor: profile.name_color };
+  const content = (
+    <>
       {profile.avatar_url ? (
         <img src={profile.avatar_url} alt={profile.username} className="size-full object-cover" />
       ) : (
@@ -28,6 +23,14 @@ export function Avatar({ profile, size = "md", onClick, ring = true }: { profile
       {profile.is_online && (
         <span className="absolute bottom-0 left-0 size-2.5 rounded-full bg-green-400 ring-2 ring-background" />
       )}
+    </>
+  );
+
+  if (!onClick) return <span className={className} style={style}>{content}</span>;
+
+  return (
+    <button type="button" onClick={onClick} className={className} style={style}>
+      {content}
     </button>
   );
 }
