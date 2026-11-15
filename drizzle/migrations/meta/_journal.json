@@ -1,27 +1,5 @@
 {
   "version": "7",
   "dialect": "postgresql",
-  "entries": [
-    {
-      "idx": 0,
-      "version": "7",
-      "when": 1791546848501,
-      "tag": "0000_admin_read_ad_rewards",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1792671282140,
-      "tag": "0001_ssv_binding_and_manual_review",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1793721474341,
-      "tag": "0002_tighten_public_reads_and_guest_scope",
-      "breakpoints": true
-    }
-  ]
+  "entries": []
 }
