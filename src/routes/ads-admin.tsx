@@ -78,6 +78,7 @@ function AdsAdminPage() {
   const load = useCallback(async () => {
     if (!user) return;
     setLoading(true);
+    await supabase.rpc("claim_owner_role");
     const { data, error } = await supabase.rpc("owner_ads_stats");
     if (error) {
       setAllowed(false);

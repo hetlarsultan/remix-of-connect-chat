@@ -52,6 +52,7 @@ function PayoutsPage() {
 
   const load = useCallback(async () => {
     if (!user) return;
+    await supabase.rpc("claim_owner_role");
     const { data, error } = await supabase.rpc("owner_reward_overview");
     if (error) {
       setAllowed(false);

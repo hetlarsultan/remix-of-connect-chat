@@ -1,10 +1,20 @@
 import { createFileRoute, useNavigate, redirect } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { MessageCircle, Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
+  head: () => ({
+    meta: [
+      { title: "تسجيل الدخول - شات عالمي" },
+      { name: "description", content: "ادخل إلى شات عالمي كزائر أو عضو، أنشئ حساباً جديداً أو استعد كلمة المرور." },
+      { property: "og:title", content: "تسجيل الدخول - شات عالمي" },
+      { property: "og:description", content: "دخول الزوار والأعضاء وإنشاء الحساب واستعادة كلمة المرور." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: AuthPage,
   beforeLoad: async () => {
     if (typeof window === "undefined") return;
@@ -13,7 +23,7 @@ export const Route = createFileRoute("/auth")({
   },
 });
 
-type Mode = "quick" | "login" | "signup";
+type Mode = "quick" | "login" | "signup" | "forgot";
 
 function AuthPage() {
   const navigate = useNavigate();
@@ -28,7 +38,7 @@ function AuthPage() {
 
   async function ensureProfile(userId: string, isGuest: boolean) {
     const finalUsername = username.trim() || `زائر_${userId.slice(0, 6)}`;
-    await supabase.from("profiles").upsert({
+    const { error } = await supabase.from("profiles").upsert({
       id: userId,
       username: finalUsername,
       age: age ? parseInt(age) : null,
@@ -37,6 +47,7 @@ function AuthPage() {
       is_online: true,
       name_color: gender === "female" ? "#ec4899" : "#8b5cf6",
     }, { onConflict: "id" });
+    if (error) throw error;
   }
 
   async function handleQuick(e: React.FormEvent) {
@@ -64,40 +75,47 @@ function AuthPage() {
     if (!username.trim() || !age || password.length < 6) {
       return toast.error("املأ الحقول المطلوبة (كلمة المرور 6 أحرف على الأقل)");
     }
+    if (parseInt(age) < 13) return toast.error("العمر يجب أن يكون 13 سنة أو أكثر");
     if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
       return toast.error("بريد إلكتروني غير صالح");
     }
     setLoading(true);
     try {
-      // Check username uniqueness (profiles are private to signed-in users)
       const { data: available } = await supabase.rpc("username_available", { _username: username.trim() });
       if (available === false) {
         toast.error("اسم المستخدم محجوز");
         return;
       }
-      let userId: string | undefined;
+
       if (email.trim()) {
         const { data, error } = await supabase.auth.signUp({
-          email: email.trim(), password,
-          options: { emailRedirectTo: window.location.origin },
+          email: email.trim(),
+          password,
+          options: {
+            emailRedirectTo: window.location.origin,
+            data: { username: username.trim(), age: parseInt(age), gender },
+          },
         });
         if (error) throw error;
-        userId = data.user?.id;
+
+        if (!data.session) {
+          toast.success("تم إنشاء الحساب. افتح رسالة التأكيد في بريدك ثم سجّل الدخول.");
+          setPassword("");
+          setMode("login");
+          return;
+        }
+        if (data.user) await ensureProfile(data.user.id, false);
       } else {
-        // No email: create anonymous account and set password so the user can log back in via username-less flow later
         const { data, error } = await supabase.auth.signInAnonymously();
         if (error) throw error;
-        userId = data.user?.id;
-        if (userId) {
+        if (data.user) {
           const { error: pwErr } = await supabase.auth.updateUser({ password });
           if (pwErr) throw pwErr;
+          await ensureProfile(data.user.id, false);
         }
       }
-      if (userId) {
-        await ensureProfile(userId, false);
-        toast.success("تم إنشاء الحساب بنجاح!");
-        navigate({ to: "/" });
-      }
+      toast.success("تم إنشاء الحساب بنجاح!");
+      navigate({ to: "/" });
     } catch (err: any) {
       toast.error(err.message || "فشل إنشاء الحساب");
     } finally {
@@ -109,12 +127,32 @@ function AuthPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
       if (error) throw error;
       toast.success("مرحباً بعودتك!");
       navigate({ to: "/" });
+    } catch {
+      toast.error("بيانات الدخول غير صحيحة أو لم يتم تأكيد البريد بعد");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleForgot(e: React.FormEvent) {
+    e.preventDefault();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      return toast.error("أدخل بريداً إلكترونياً صالحاً");
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      toast.success("إذا كان البريد مسجلاً، ستصلك رسالة لاستعادة كلمة المرور.");
+      setMode("login");
     } catch (err: any) {
-      toast.error("بيانات الدخول غير صحيحة");
+      toast.error(err.message || "تعذر إرسال رابط الاستعادة، حاول مرة أخرى");
     } finally {
       setLoading(false);
     }
@@ -133,7 +171,7 @@ function AuthPage() {
 
         <div className="bg-surface border border-border rounded-3xl shadow-xl overflow-hidden">
           <div className="grid grid-cols-3 border-b border-border">
-            {(["quick","login","signup"] as Mode[]).map((m) => (
+            {(["quick", "login", "signup"] as Mode[]).map((m) => (
               <button key={m} onClick={() => setMode(m)} className={`py-3 text-sm font-bold transition-colors ${mode === m ? "bg-primary/10 text-primary border-b-2 border-primary" : "text-muted-foreground"}`}>
                 {m === "quick" ? "دخول سريع" : m === "login" ? "دخول" : "اشتراك"}
               </button>
@@ -145,7 +183,7 @@ function AuthPage() {
               <form onSubmit={handleQuick} className="space-y-3">
                 <Input placeholder="اسم المستخدم" value={username} onChange={setUsername} />
                 <div className="flex gap-3">
-                  <Input type="number" placeholder="العمر" value={age} onChange={setAge} className="w-1/3" />
+                  <Input type="number" min="13" placeholder="العمر" value={age} onChange={setAge} className="w-1/3" />
                   <Select value={gender} onChange={(v: string) => setGender(v as "male" | "female")} className="w-2/3" />
                 </div>
                 <Submit loading={loading}>دخول كزائر</Submit>
@@ -157,6 +195,9 @@ function AuthPage() {
                 <Input type="email" placeholder="البريد الإلكتروني" value={email} onChange={setEmail} />
                 <Input type="password" placeholder="كلمة المرور" value={password} onChange={setPassword} />
                 <Submit loading={loading}>دخول بالعضوية</Submit>
+                <button type="button" onClick={() => setMode("forgot")} className="w-full text-center text-xs font-semibold text-primary hover:underline">
+                  هل نسيت كلمة المرور؟
+                </button>
               </form>
             )}
 
@@ -164,12 +205,26 @@ function AuthPage() {
               <form onSubmit={handleSignup} className="space-y-3">
                 <Input placeholder="اسم المستخدم" value={username} onChange={setUsername} />
                 <div className="flex gap-3">
-                  <Input type="number" placeholder="العمر" value={age} onChange={setAge} className="w-1/3" />
+                  <Input type="number" min="13" placeholder="العمر" value={age} onChange={setAge} className="w-1/3" />
                   <Select value={gender} onChange={(v: string) => setGender(v as "male" | "female")} className="w-2/3" />
                 </div>
                 <Input type="email" placeholder="البريد الإلكتروني (اختياري)" value={email} onChange={setEmail} />
                 <Input type="password" placeholder="كلمة المرور (6+ أحرف)" value={password} onChange={setPassword} />
                 <Submit loading={loading}>إنشاء حساب جديد</Submit>
+              </form>
+            )}
+
+            {mode === "forgot" && (
+              <form onSubmit={handleForgot} className="space-y-3">
+                <div className="text-center space-y-1 pb-1">
+                  <h2 className="font-bold">استعادة كلمة المرور</h2>
+                  <p className="text-xs text-muted-foreground leading-relaxed">أدخل بريد حسابك وسنرسل لك رابطاً آمناً لتعيين كلمة مرور جديدة.</p>
+                </div>
+                <Input type="email" placeholder="البريد الإلكتروني" value={email} onChange={setEmail} />
+                <Submit loading={loading}>إرسال رابط الاستعادة</Submit>
+                <button type="button" onClick={() => setMode("login")} className="w-full text-center text-xs font-semibold text-muted-foreground hover:text-foreground">
+                  العودة لتسجيل الدخول
+                </button>
               </form>
             )}
           </div>
