@@ -62,6 +62,26 @@ function setState(patch: Partial<AuthState>) {
   for (const l of listeners) l(state);
 }
 
+let housekeepingUserId: string | null = null;
+
+function scheduleHousekeeping(user: User) {
+  if (housekeepingUserId === user.id) return;
+  housekeepingUserId = user.id;
+  // The server verifies the email before granting the owner role.
+  void supabase.rpc("claim_owner_role");
+  const idle = (cb: () => void) =>
+    "requestIdleCallback" in window
+      ? (window as unknown as { requestIdleCallback: (c: () => void) => void }).requestIdleCallback(cb)
+      : setTimeout(cb, 1200);
+  idle(() => {
+    void supabase
+      .from("profiles")
+      .update({ last_seen: new Date().toISOString(), is_online: true })
+      .eq("id", user.id);
+    void detectAndSaveCountry(user.id);
+  });
+}
+
 function init() {
   if (initialized || typeof window === "undefined") return;
   initialized = true;
@@ -73,17 +93,19 @@ function init() {
       return;
     }
     if (!u) {
+      housekeepingUserId = null;
       writeCachedProfile(null);
       setState({ user: null, profile: null, loading: false });
       return;
     }
+    scheduleHousekeeping(u);
     // Reuse cached profile for the same user instead of refetching.
     if (state.profile?.id === u.id) {
       setState({ user: u, loading: false });
       return;
     }
     setState({ user: u });
-    void loadProfile(u.id).then((p) => {
+    void loadOrCreateProfile(u).then((p) => {
       writeCachedProfile(p);
       setState({ profile: p, loading: false });
     });
@@ -99,28 +121,11 @@ function init() {
     const cached = readCachedProfile();
     // Instant paint from cache, then background refresh.
     setState({ user: u, profile: cached?.id === u.id ? cached : state.profile, loading: !(cached?.id === u.id) });
+    scheduleHousekeeping(u);
 
-    void loadProfile(u.id).then((p) => {
+    void loadOrCreateProfile(u).then((p) => {
       writeCachedProfile(p);
       setState({ profile: p, loading: false });
-    });
-
-    // Deferred, non-blocking housekeeping (never delays first paint).
-    const idle = (cb: () => void) =>
-      "requestIdleCallback" in window
-        ? (window as unknown as { requestIdleCallback: (c: () => void) => void }).requestIdleCallback(cb)
-        : setTimeout(cb, 1200);
-    // Grants the app owner role when the signed-in email is the configured
-    // owner. The email check happens server-side; the client cannot fake it.
-    idle(() => {
-      void supabase.rpc("claim_owner_role");
-    });
-    idle(() => {
-      void supabase
-        .from("profiles")
-        .update({ last_seen: new Date().toISOString(), is_online: true })
-        .eq("id", u.id);
-      void detectAndSaveCountry(u.id);
     });
   });
 }
@@ -153,4 +158,38 @@ export function useAuth() {
 export async function loadProfile(userId: string): Promise<Profile | null> {
   const { data } = await supabase.from("profiles").select("*").eq("id", userId).maybeSingle();
   return data as Profile | null;
+}
+
+async function loadOrCreateProfile(user: User): Promise<Profile | null> {
+  const existing = await loadProfile(user.id);
+  if (existing) return existing;
+
+  const metadata = (user.user_metadata ?? {}) as Record<string, unknown>;
+  const isGuest = user.is_anonymous ?? false;
+  const gender = metadata.gender === "female" ? "female" : "male";
+  const rawAge = Number(metadata.age);
+  const age = Number.isInteger(rawAge) && rawAge >= 13 && rawAge <= 120 ? rawAge : null;
+  const requestedName = typeof metadata.username === "string" ? metadata.username.trim().slice(0, 64) : "";
+  const fallbackName = `${isGuest ? "زائر" : "عضو"}_${user.id.slice(0, 6)}`;
+  const values = {
+    id: user.id,
+    age,
+    gender,
+    is_guest: isGuest,
+    is_online: true,
+    name_color: gender === "female" ? "#ec4899" : "#8b5cf6",
+  };
+
+  const { error } = await supabase.from("profiles").upsert({
+    ...values,
+    username: requestedName || fallbackName,
+  }, { onConflict: "id" });
+  if (!error) return loadProfile(user.id);
+
+  // Another account may have claimed the name while this email awaited confirmation.
+  const { error: retryError } = await supabase.from("profiles").upsert({
+    ...values,
+    username: fallbackName,
+  }, { onConflict: "id" });
+  return retryError ? null : loadProfile(user.id);
 }
