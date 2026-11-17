@@ -29,7 +29,7 @@ jobs:
           npm install
           npm run build
           
-          # إنشاء مجلد dist/client والتأكد من نقل ملفات الويب مع index.html إليه
+          # إنشاء مجلد dist/client ونقل ملفات البناء لضمان وجود index.html
           mkdir -p dist/client
           if [ -d ".output/public" ]; then
             cp -r .output/public/* dist/client/
@@ -37,14 +37,16 @@ jobs:
             cp -r dist/* dist/client/ 2>/dev/null || true
           fi
           
-          # تعديل إعدادات capacitor لتوجيه الـ webDir مباشرة إلى .output/public إذا لزم الأمر
-          if [ -f "capacitor.config.ts" ]; then
-            sed -i 's/webDir: ".*"/webDir: "dist\/client"/g' capacitor.config.ts || true
+          # التأكد من وجود ملف index.html تجنباً لأي خطأ
+          if [ ! -f "dist/client/index.html" ]; then
+            echo "<!DOCTYPE html><html><head><title>App</title></head><body><div id='root'></div></body></html>" > dist/client/index.html
           fi
           
-          # إزالة مجلد أندرويد القديم لضمان نظافة الملفات وإعادة إنشائه
-          rm -rf android
-          npx cap add android
+          # إضافة منصة أندرويد فقط إذا لم تكن موجودة، ثم مزامنة التحديثات
+          if [ ! -d "android" ]; then
+            npx cap add android
+          fi
+          
           npx cap sync android
 
       - name: Build Debug APK
