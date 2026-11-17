@@ -24,21 +24,24 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Build Project & Fix Directories
+      - name: Build Project & Prepare Capacitor
         run: |
           npm install
           npm run build
           
-          # إنشاء مسار المجلد المطلوب بالضبط وتصدير الملفات إليه
+          # إنشاء مجلد dist/client ونقل ملفات البناء إليه بدقة
           mkdir -p dist/client
-          if [ -d "dist" ] && [ "$(ls -A dist)" != "client" ]; then
-            cp -r dist/* dist/client/ || true
+          if [ -d "dist/client/client" ]; then
+            rm -rf dist/client/client
           fi
           
-          # إزالة مجلد أندرويد القديم إن وجد لضمان مزامنة نظيفة بدون أخطاء
-          rm -rf android
+          # نسخ محتويات مجلد dist (أو public إن وجدت) لضمان وجود index.html
+          if [ -d "dist" ]; then
+            cp -r dist/* dist/client/ 2>/dev/null || true
+          fi
           
-          # إضافة منصة أندرويد والمزامنة
+          # تنظيف مجلد أندرويد القديم وإعادة إنشائه بنظافة تامة
+          rm -rf android
           npx cap add android
           npx cap sync android
 
