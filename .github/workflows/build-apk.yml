@@ -28,12 +28,11 @@ jobs:
         run: |
           npm install
           npm run build
-          # إنشاء مجلد dist/client ونقل ملفات الويب إليه إن لم يكن موجوداً
-          mkdir -p dist/client
-          if [ -d "dist" ] && [ "$(ls -A dist)" ]; then
-            cp -r dist/* dist/client/ || true
-          fi
-          npx cap init "شات عالمي" com.yourcompany.chat --web-dir dist/client || true
+          # نسخ ملفات الويب بشكل صحيح إلى مجلد منفصل لتجنب التداخل
+          mkdir -p www
+          cp -r dist/* www/ || true
+          
+          # إضافة منصة أندرويد مباشرة بدون إعادة تهيئة الـ cap
           npx cap add android || true
           npx cap sync android
 
