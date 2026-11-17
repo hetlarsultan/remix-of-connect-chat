@@ -24,24 +24,24 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Build Project & Fix Web Assets
+      - name: Build Project & Sync Capacitor
         run: |
           npm install
           npm run build
           
-          # التأكد من إنشاء مجلد dist/client ونقل ملفات الoutput أو dist إليه
+          # تجهيز مجلد الويب المطلوب بدقة
           mkdir -p dist/client
-          
-          # إذا وُجد مجلد .output/public (خاص بـ Nitro/TanStack)، ننقل محتوياته لـ dist/client لضمان وجود index.html
           if [ -d ".output/public" ]; then
             cp -r .output/public/* dist/client/
           elif [ -d "dist" ]; then
             cp -r dist/* dist/client/ 2>/dev/null || true
           fi
           
-          # تنظيف أي مجلد أندرويد قديم وإعادة إنشائه
-          rm -rf android
-          npx cap add android
+          # إضافة منصة أندرويد فقط إذا لم تكن موجودة، لمنع حذف ملفات الإضافات
+          if [ ! -d "android" ]; then
+            npx cap add android
+          fi
+          
           npx cap sync android
 
       - name: Build Debug APK
