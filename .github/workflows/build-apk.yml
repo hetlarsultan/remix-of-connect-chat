@@ -24,12 +24,17 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Install Dependencies
+      - name: Install Dependencies & Build
         run: |
           npm install
+          npm run build
+          # إنشاء مجلد dist/client ونقل ملفات الويب إليه إن لم يكن موجوداً
+          mkdir -p dist/client
+          if [ -d "dist" ] && [ "$(ls -A dist)" ]; then
+            cp -r dist/* dist/client/ || true
+          fi
           npx cap init "شات عالمي" com.yourcompany.chat --web-dir dist/client || true
           npx cap add android || true
-          npm run build
           npx cap sync android
 
       - name: Build Debug APK
