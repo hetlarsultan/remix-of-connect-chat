@@ -1,0 +1,59 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install Dependencies & Capacitor
+        run: |
+          npm install
+          npx cap init "شات عالمي" com.yourcompany.chat --web-dir dist/client || true
+          npx cap add android || true
+          npm run build
+          npx cap sync android
+
+      - name: Inject AdMob Manifest Configuration
+        run: |
+          MANIFEST_PATH="android/app/src/main/AndroidManifest.xml"
+          # إضافة الأذونات وإعدادات AdMob إذا لم تكن موجودة
+          if ! grep -q "com.google.android.gms.permission.AD_ID" "$MANIFEST_PATH"; then
+            sed -i '/<application/i \
+    <uses-permission android:name="android.permission.INTERNET" />\n    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />\n    <uses-permission android:name="com.google.android.gms.permission.AD_ID" />\n' "$MANIFEST_PATH"
+          fi
+          
+          if ! grep -q "com.google.android.gms.ads.APPLICATION_ID" "$MANIFEST_PATH"; then
+            sed -i '/<application/a \
+        <meta-data\n            android:name="com.google.android.gms.ads.APPLICATION_ID"\n            android:value="ca-app-pub-8449241346087567~3470418204" />' "$MANIFEST_PATH"
+          fi
+
+      - name: Build Debug APK with Gradle
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
