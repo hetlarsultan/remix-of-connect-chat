@@ -9,7 +9,14 @@ import { toast } from "sonner";
 
 
 export const Route = createFileRoute("/notifications")({
-  head: () => ({ meta: [{ title: "مركز الإشعارات - شات عالمي" }] }),
+  head: () => ({ meta: [
+    { title: "مركز الإشعارات - شات عالمي" },
+    { name: "description", content: "تابع الرسائل الخاصة غير المقروءة وطلبات الصداقة الجديدة في شات عالمي." },
+    { property: "og:title", content: "مركز الإشعارات - شات عالمي" },
+    { property: "og:description", content: "إشعارات الرسائل وطلبات الصداقة في مكان واحد." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: NotificationsCenter,
 });
 

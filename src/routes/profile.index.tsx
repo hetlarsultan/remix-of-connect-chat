@@ -10,7 +10,14 @@ import { uploadAvatar } from "@/lib/storage";
 import { countryFlag } from "@/lib/geolocation";
 
 export const Route = createFileRoute("/profile/")({
-  head: () => ({ meta: [{ title: "ملفي الشخصي - شات عالمي" }] }),
+  head: () => ({ meta: [
+    { title: "ملفي الشخصي - شات عالمي" },
+    { name: "description", content: "حدّث اسمك وصورتك ونبذتك وألوان ملفك الشخصي في شات عالمي." },
+    { property: "og:title", content: "ملفي الشخصي - شات عالمي" },
+    { property: "og:description", content: "إدارة الملف الشخصي والصورة والألوان في شات عالمي." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: ProfilePage,
 });
 

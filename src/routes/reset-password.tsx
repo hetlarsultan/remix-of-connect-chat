@@ -18,16 +18,24 @@ export const Route = createFileRoute("/reset-password")({
   component: ResetPasswordPage,
 });
 
+function hasRecoveryHint() {
+  if (typeof window === "undefined") return false;
+  return window.location.hash.includes("type=recovery") || new URLSearchParams(window.location.search).has("code");
+}
+
 function ResetPasswordPage() {
   const navigate = useNavigate();
   const [ready, setReady] = useState(false);
   const [checking, setChecking] = useState(true);
+  const [recovery, setRecovery] = useState(hasRecoveryHint);
+  const [currentPassword, setCurrentPassword] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY") setRecovery(true);
       if (event === "PASSWORD_RECOVERY" || (event === "SIGNED_IN" && session)) {
         setReady(true);
         setChecking(false);
@@ -42,13 +50,19 @@ function ResetPasswordPage() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (!recovery && !currentPassword) return toast.error("أدخل كلمة المرور الحالية");
     if (password.length < 6) return toast.error("كلمة المرور يجب أن تكون 6 أحرف على الأقل");
     if (password !== confirm) return toast.error("كلمتا المرور غير متطابقتين");
     setSaving(true);
-    const { error } = await supabase.auth.updateUser({ password });
+    const { error } = await supabase.auth.updateUser({
+      password,
+      ...(recovery ? {} : { current_password: currentPassword }),
+    });
     setSaving(false);
     if (error) {
-      toast.error("انتهت صلاحية الرابط أو تعذر تغيير كلمة المرور. اطلب رابطاً جديداً.");
+      toast.error(error.code === "current_password_required" || error.code === "invalid_current_password"
+        ? "كلمة المرور الحالية غير صحيحة"
+        : "انتهت صلاحية الرابط أو تعذر تغيير كلمة المرور. اطلب رابطاً جديداً.");
       return;
     }
     toast.success("تم تغيير كلمة المرور بنجاح");
@@ -68,6 +82,16 @@ function ResetPasswordPage() {
           <div className="flex justify-center py-6 text-muted-foreground"><Loader2 className="size-6 animate-spin" /></div>
         ) : ready ? (
           <form onSubmit={submit} className="space-y-3">
+            {!recovery && (
+              <input
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                placeholder="كلمة المرور الحالية"
+                autoComplete="current-password"
+                className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary"
+              />
+            )}
             <input
               type="password"
               value={password}

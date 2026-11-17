@@ -9,6 +9,14 @@ import { toast } from "sonner";
 import { countryFlag } from "@/lib/geolocation";
 
 export const Route = createFileRoute("/profile/$userId")({
+  head: () => ({ meta: [
+    { title: "ملف العضو - شات عالمي" },
+    { name: "description", content: "تعرّف على عضو شات عالمي وأرسل رسالة خاصة أو طلب صداقة." },
+    { property: "og:title", content: "ملف العضو - شات عالمي" },
+    { property: "og:description", content: "ملف عضو وخيارات التواصل والصداقة في شات عالمي." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: UserProfilePage,
 });
 

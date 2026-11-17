@@ -10,7 +10,14 @@ import { Lock, LockOpen } from "lucide-react";
 import { swr } from "@/lib/cache";
 
 export const Route = createFileRoute("/messages/")({
-  head: () => ({ meta: [{ title: "الرسائل الخاصة - شات عالمي" }] }),
+  head: () => ({ meta: [
+    { title: "الرسائل الخاصة - شات عالمي" },
+    { name: "description", content: "افتح محادثاتك الخاصة وتابع رسائل الأصدقاء في شات عالمي." },
+    { property: "og:title", content: "الرسائل الخاصة - شات عالمي" },
+    { property: "og:description", content: "محادثاتك الخاصة ورسائلك غير المقروءة في شات عالمي." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: MessagesList,
 });
 

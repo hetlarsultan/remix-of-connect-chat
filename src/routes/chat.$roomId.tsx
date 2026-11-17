@@ -10,6 +10,14 @@ import { toast } from "sonner";
 import { getCached, setCached } from "@/lib/cache";
 
 export const Route = createFileRoute("/chat/$roomId")({
+  head: () => ({ meta: [
+    { title: "غرفة الدردشة - شات عالمي" },
+    { name: "description", content: "شارك في المحادثة الجماعية وأرسل رسائل وردوداً فورية في شات عالمي." },
+    { property: "og:title", content: "غرفة الدردشة - شات عالمي" },
+    { property: "og:description", content: "محادثات جماعية فورية مع أعضاء شات عالمي." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: ChatRoom,
 });
 

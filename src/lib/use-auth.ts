@@ -180,20 +180,19 @@ async function loadOrCreateProfile(user: User): Promise<Profile | null> {
     name_color: gender === "female" ? "#ec4899" : "#8b5cf6",
   };
 
-  const { error } = await supabase.from("profiles").insert({
+  await supabase.from("profiles").upsert({
     ...values,
     username: requestedName || fallbackName,
-  });
-  if (!error) return loadProfile(user.id);
+  }, { onConflict: "id", ignoreDuplicates: true });
 
   // The auth form may have created the requested profile at the same time.
-  const createdConcurrently = await loadProfile(user.id);
-  if (createdConcurrently) return createdConcurrently;
+  const created = await loadProfile(user.id);
+  if (created) return created;
 
   // Another account may have claimed the name while this email awaited confirmation.
-  const { error: retryError } = await supabase.from("profiles").insert({
+  await supabase.from("profiles").upsert({
     ...values,
     username: fallbackName,
-  });
-  return retryError ? null : loadProfile(user.id);
+  }, { onConflict: "id", ignoreDuplicates: true });
+  return loadProfile(user.id);
 }

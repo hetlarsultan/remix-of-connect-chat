@@ -3,7 +3,14 @@ import { AppShell, PageHeader } from "@/components/AppShell";
 import { Bell, Sparkles, Trophy } from "lucide-react";
 
 export const Route = createFileRoute("/news")({
-  head: () => ({ meta: [{ title: "أخبار الشات - شات عالمي" }] }),
+  head: () => ({ meta: [
+    { title: "أخبار الشات - شات عالمي" },
+    { name: "description", content: "تابع آخر تحديثات شات عالمي والغرف الجديدة والإعلانات والمسابقات." },
+    { property: "og:title", content: "أخبار الشات - شات عالمي" },
+    { property: "og:description", content: "آخر أخبار وتحديثات مجتمع شات عالمي." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: NewsPage,
 });
 

@@ -10,7 +10,14 @@ import { swr } from "@/lib/cache";
 
 
 export const Route = createFileRoute("/members")({
-  head: () => ({ meta: [{ title: "المتصلون - شات عالمي" }] }),
+  head: () => ({ meta: [
+    { title: "المتصلون - شات عالمي" },
+    { name: "description", content: "ابحث عن أعضاء شات عالمي وتصفح المتصلين وابدأ صداقات ومحادثات جديدة." },
+    { property: "og:title", content: "المتصلون - شات عالمي" },
+    { property: "og:description", content: "اكتشف أعضاء شات عالمي وتواصل معهم برسالة أو طلب صداقة." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: MembersPage,
 });
 

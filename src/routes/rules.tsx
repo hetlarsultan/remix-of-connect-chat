@@ -3,7 +3,14 @@ import { AppShell, PageHeader } from "@/components/AppShell";
 import { Shield, AlertTriangle, Lock } from "lucide-react";
 
 export const Route = createFileRoute("/rules")({
-  head: () => ({ meta: [{ title: "القوانين والخصوصية - شات عالمي" }] }),
+  head: () => ({ meta: [
+    { title: "القوانين والخصوصية - شات عالمي" },
+    { name: "description", content: "تعرف على قوانين الدردشة والمحتوى والعقوبات وسياسة الخصوصية في شات عالمي." },
+    { property: "og:title", content: "القوانين والخصوصية - شات عالمي" },
+    { property: "og:description", content: "قواعد الاستخدام المحترم وسياسة الخصوصية لمجتمع شات عالمي." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: RulesPage,
 });
 

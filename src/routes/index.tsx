@@ -12,6 +12,10 @@ export const Route = createFileRoute("/")({
     meta: [
       { title: "غرف الدردشة - شات عالمي" },
       { name: "description", content: "تصفح جميع غرف الدردشة المتاحة وانضم للحوار" },
+      { property: "og:title", content: "غرف الدردشة - شات عالمي" },
+      { property: "og:description", content: "تصفح غرف شات عالمي وانضم إلى محادثات مع أشخاص جدد." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: RoomsPage,

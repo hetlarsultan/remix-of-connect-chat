@@ -4,7 +4,14 @@ import { AppShell, PageHeader } from "@/components/AppShell";
 import { Volume2, Bell, MessageSquare, LogIn } from "lucide-react";
 
 export const Route = createFileRoute("/audio")({
-  head: () => ({ meta: [{ title: "إعدادات الصوت - شات عالمي" }] }),
+  head: () => ({ meta: [
+    { title: "إعدادات الصوت - شات عالمي" },
+    { name: "description", content: "تحكم في مستوى الصوت وأصوات رسائل الغرف والرسائل الخاصة والتنبيهات." },
+    { property: "og:title", content: "إعدادات الصوت - شات عالمي" },
+    { property: "og:description", content: "خصص أصوات شات عالمي والتنبيهات بما يناسبك." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: AudioPage,
 });
 

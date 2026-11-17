@@ -9,6 +9,14 @@ import { toast } from "sonner";
 import { uploadPrivateImage, getPrivateImageUrl, deletePrivateImage } from "@/lib/storage";
 
 export const Route = createFileRoute("/messages/$userId")({
+  head: () => ({ meta: [
+    { title: "محادثة خاصة - شات عالمي" },
+    { name: "description", content: "تبادل رسائل خاصة وصوراً مؤقتة مع أعضاء شات عالمي." },
+    { property: "og:title", content: "محادثة خاصة - شات عالمي" },
+    { property: "og:description", content: "رسائل خاصة فورية مع أصدقائك في شات عالمي." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: PrivateChat,
 });
 
