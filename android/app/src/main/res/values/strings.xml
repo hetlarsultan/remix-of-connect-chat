@@ -4,4 +4,5 @@
     <string name="title_activity_main">شات عالمي</string>
     <string name="package_name">com.yourcompany.chat</string>
     <string name="custom_url_scheme">com.yourcompany.chat</string>
+    <string name="admob_app_id">ca-app-pub-8449241346087567~3470418204</string>
 </resources>
