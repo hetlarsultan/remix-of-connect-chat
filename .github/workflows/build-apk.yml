@@ -24,16 +24,22 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Install Dependencies & Build
+      - name: Build Project & Fix Directories
         run: |
           npm install
           npm run build
-          # نسخ ملفات الويب بشكل صحيح إلى مجلد منفصل لتجنب التداخل
-          mkdir -p www
-          cp -r dist/* www/ || true
           
-          # إضافة منصة أندرويد مباشرة بدون إعادة تهيئة الـ cap
-          npx cap add android || true
+          # إنشاء مسار المجلد المطلوب بالضبط وتصدير الملفات إليه
+          mkdir -p dist/client
+          if [ -d "dist" ] && [ "$(ls -A dist)" != "client" ]; then
+            cp -r dist/* dist/client/ || true
+          fi
+          
+          # إزالة مجلد أندرويد القديم إن وجد لضمان مزامنة نظيفة بدون أخطاء
+          rm -rf android
+          
+          # إضافة منصة أندرويد والمزامنة
+          npx cap add android
           npx cap sync android
 
       - name: Build Debug APK
