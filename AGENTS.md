@@ -6,3 +6,4 @@
 - Tests use vitest (`bunx vitest run`), next to the code they cover.
 - AdMob SSV signature and ad-unit checks live in pure helpers in src/lib/ssv-verify.ts (tested with a locally generated P-256 key), so the public SSV route stays thin and the rules stay testable.
 - AdMob client rules (platform detection, test-unit swap in dev builds, LoadAdError parsing/explanations) live in pure helpers in src/lib/admob-diagnostics.ts; the native bridge in src/lib/rewarded-ad.ts reads `window.Capacitor.Plugins.AdMob` first. The Capacitor Android wrapper lives in `android/`; its AdMob application ID belongs in Android resources, while the rewarded unit ID remains owner-managed in `ad_settings`.
+- Android WebView loads the published site via capacitor server.url, because the SSR build has no static index.html.
