@@ -28,23 +28,22 @@ jobs:
         run: |
           npm install
           npm run build
-          
+
           mkdir -p dist/client
           if [ -d ".output/public" ]; then
             cp -r .output/public/* dist/client/
-          elif [ -d "dist" ]; then
-            cp -r dist/* dist/client/ 2>/dev/null || true
           fi
-          
-          if [ ! -f "dist/client/index.html" ]; then
-            echo "<!DOCTYPE html><html><head><title>App</title></head><body><div id='root'></div></body></html>" > dist/client/index.html
-          fi
-          
+
           if [ ! -d "android" ]; then
             npx cap add android
           fi
-          
+
+          mkdir -p android/app/src/main/assets
           npx cap sync android
+
+      - name: Verify Android startup configuration
+        run: |
+          node -e "const fs = require('fs'); const config = JSON.parse(fs.readFileSync('android/app/src/main/assets/capacitor.config.json', 'utf8')); if (!config.server?.url?.startsWith('https://')) throw new Error('APK startup requires capacitor.config.ts server.url to use HTTPS'); console.log('Android startup URL:', config.server.url);"
 
       - name: Build Debug APK
         run: |
