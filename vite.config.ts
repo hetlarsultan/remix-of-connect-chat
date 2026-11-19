@@ -6,10 +6,18 @@
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
+// Android (Capacitor) builds set CAPACITOR_BUILD=1 to also emit a static
+// dist/client/index.html app shell that the WebView can load from local files.
+// The normal web build is unchanged.
+const isCapacitorBuild = process.env.CAPACITOR_BUILD === "1";
+
 export default defineConfig({
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
     server: { entry: "server" },
+    ...(isCapacitorBuild
+      ? { spa: { enabled: true, prerender: { outputPath: "/index.html", crawlLinks: false } } }
+      : {}),
   },
 });
