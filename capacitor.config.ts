@@ -7,7 +7,7 @@ const config: CapacitorConfig = {
   appName: 'شات عالمي',
   webDir: 'dist/client',
   server: {
-    url: 'https://project--6b63b8a6-e865-46f0-971e-30a877315af0.lovable.app',
+    url: 'https://chat-room-circles.lovable.app',
     cleartext: false,
     androidScheme: 'https',
   },
