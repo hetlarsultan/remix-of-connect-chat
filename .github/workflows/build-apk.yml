@@ -25,25 +25,27 @@ jobs:
           java-version: '21'
 
       - name: Build Project & Sync Capacitor
+        env:
+          CAPACITOR_BUILD: '1'
         run: |
           npm install
           npm run build
-
-          mkdir -p dist/client
-          if [ -d ".output/public" ]; then
-            cp -r .output/public/* dist/client/
-          fi
 
           if [ ! -d "android" ]; then
             npx cap add android
           fi
 
-          mkdir -p android/app/src/main/assets
           npx cap sync android
 
-      - name: Verify Android startup configuration
+      - name: Verify bundled Android web files
         run: |
-          node -e "const fs = require('fs'); const config = JSON.parse(fs.readFileSync('android/app/src/main/assets/capacitor.config.json', 'utf8')); if (!config.server?.url?.startsWith('https://')) throw new Error('APK startup requires capacitor.config.ts server.url to use HTTPS'); console.log('Android startup URL:', config.server.url);"
+          test -s dist/client/index.html || { echo "dist/client/index.html is missing"; exit 1; }
+          ls dist/client/assets/*.js > /dev/null || { echo "dist/client/assets has no JS"; exit 1; }
+          ASSETS=android/app/src/main/assets
+          test -s $ASSETS/public/index.html || { echo "index.html was not copied into the APK"; exit 1; }
+          grep -q '/assets/' $ASSETS/public/index.html || { echo "index.html does not load the app scripts"; exit 1; }
+          node -e "const c = JSON.parse(require('fs').readFileSync('$ASSETS/capacitor.config.json','utf8')); if (c.server && c.server.url) throw new Error('server.url must not be set; the APK runs from bundled files'); console.log('Android runs bundled files, scheme:', c.server && c.server.androidScheme);"
+          grep -q 'ca-app-pub-8449241346087567~3470418204' android/app/src/main/res/values/strings.xml || { echo "AdMob App ID missing"; exit 1; }
 
       - name: Build Debug APK
         run: |

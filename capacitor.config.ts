@@ -1,14 +1,13 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
-// The web app renders on the server, so the build has no static index.html for the
-// Android WebView. The app therefore loads the published site directly.
+// The Android app runs from the bundled web build in dist/client (no remote server.url).
+// Build it with `CAPACITOR_BUILD=1 npm run build`, which also emits the static
+// dist/client/index.html app shell, then run `npx cap sync android`.
 const config: CapacitorConfig = {
   appId: 'com.yourcompany.chat',
   appName: 'شات عالمي',
   webDir: 'dist/client',
   server: {
-    url: 'https://chat-room-circles.lovable.app',
-    cleartext: false,
     androidScheme: 'https',
   },
 };

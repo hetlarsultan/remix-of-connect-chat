@@ -13,7 +13,7 @@ plugin; opening an older APK does not include later fixes.
 
 ```bash
 bun install
-bun run build
+CAPACITOR_BUILD=1 bun run build   # also writes dist/client/index.html for the APK
 bunx cap sync android
 cd android && ./gradlew assembleDebug
 ```
