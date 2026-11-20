@@ -34,7 +34,14 @@ jobs:
           if [ ! -d "android" ]; then
             npx cap add android
           fi
-
+      - name: Build Project & Sync Capacitor
+        run: |
+          npm install
+          CAPACITOR_BUILD=1 npm run build
+          rm -rf dist/client
+          mkdir -p dist/client
+          cp -r .output/public/* dist/client/
+        
           npx cap sync android
 
       - name: Verify bundled Android web files
